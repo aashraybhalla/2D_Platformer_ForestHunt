@@ -1,21 +1,33 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+
 
 public class PlayerMovement : MonoBehaviour
 {
-    private Rigidbody2D rb;
-    private SpriteRenderer sprite;
-    private Animator anim;
+    private float horizontal;
+    private float speed = 8f;
+    private float jumpingPower = 5f;
 
+    private bool isFacingRight = true;
 
-    private float dirX = 0f;
+    private bool canDash = true;
+    private bool isDashing;
+    private float dashingPower = 24f;
+    private float dashingTime = 0.2f;
+    private float dashingCooldown = 2f;
+
     private bool isGrounded;
 
-    [SerializeField] private float jumpForce = 5.5f;
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private SpriteRenderer sprite;
+    [SerializeField] private Animator anim;
 
-    private enum MovementState { idle, walking, jumping, falling }
+
+    [SerializeField] private TrailRenderer tr;
+
+    private enum MovementState { Idle, Running, Jumping }
 
 
 
@@ -30,35 +42,50 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        dirX = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(dirX * moveSpeed, rb.velocity.y);
-
- 
-
-        if (isGrounded)
+        if (isDashing)
         {
-            Jump();
+            return;
         }
 
+        horizontal = Input.GetAxisRaw("Horizontal");
+
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpingPower);
+        }
+
+        if (Input.GetButtonUp("Jump") && rb.velocity.y > 0f)
+        {
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        {
+            StartCoroutine(Dash());
+        }
+        
+
         UpdateAnimationState();
+    }
+
+    private void FixedUpdate()
+    {
+        if (isDashing)
+        {
+            return;
+        }
+
+        rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("onGround"))
         {
-            isGrounded= true;
+            isGrounded = true;
         }
         else
         {
-            isGrounded= false;
-        }
-    }
-    private void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             isGrounded = false;
         }
     }
@@ -66,32 +93,57 @@ public class PlayerMovement : MonoBehaviour
     {
         MovementState state;
 
-        if (dirX > 0f)
+        if (horizontal > 0f)
         {
-            state = MovementState.walking;
-            sprite.flipX = false;
+            state = MovementState.Running;
+            Flip();
         }
-        else if (dirX < 0f)
+        else if (horizontal < 0f)
         {
-            state = MovementState.walking;
-            sprite.flipX = true;
+            state = MovementState.Running;
+            Flip();
         }
 
         else 
         {
-            state = MovementState.idle;
+            state = MovementState.Idle;
         }
 
-        if (rb.velocity.y > .1f)
+        if (rb.velocity.y > 0.1f)
         {
-            state = MovementState.jumping;
+            state = MovementState.Jumping;
         }
-        else if (rb.velocity.y < -.1f)
-        {
-            state = MovementState.falling;
-        }
+      
 
         anim.SetInteger("state", (int)state);
+    }
+
+
+    private IEnumerator Dash()
+    {
+        canDash = false;
+        isDashing = true;
+        float originalGravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+        rb.velocity = new Vector2(transform.localScale.x * dashingPower, 0f);
+        tr.emitting = true;
+        yield return new WaitForSeconds(dashingTime);
+        tr.emitting = false;
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+        yield return new WaitForSeconds(dashingCooldown);
+        canDash = true;
+    }
+
+    private void Flip()
+    {
+        if (isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f)
+        {
+            Vector3 localScale = transform.localScale;
+            isFacingRight = !isFacingRight;
+            localScale.x *= -1f;
+            transform.localScale = localScale;
+        }
     }
 
 }

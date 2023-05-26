@@ -8,6 +8,7 @@ public class ItemCollector : MonoBehaviour
     int collectible = 0;
 
     [SerializeField] private Text collectibleText;
+    [SerializeField] private AudioSource collectionSound;
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("collectible"))
@@ -15,6 +16,7 @@ public class ItemCollector : MonoBehaviour
             Destroy(collision.gameObject);
             collectible++;
             collectibleText.text = "BOTTLES : " + collectible;
+            collectionSound.Play();
         }
     }
 }

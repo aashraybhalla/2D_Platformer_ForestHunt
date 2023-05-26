@@ -6,12 +6,12 @@ using UnityEngine.SceneManagement;
 public class Player_Win : MonoBehaviour
 {
 
-    private Animator anim;
+    [SerializeField] private AudioSource gameWin;
     private Rigidbody2D rb;
     // Start is called before the first frame update
     void Start()
     {
-        anim = GetComponent<Animator>();
+
         rb = GetComponent<Rigidbody2D>();
     }
 
@@ -19,8 +19,9 @@ public class Player_Win : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("win"))
         {
+            gameWin.Play();
             rb.constraints = RigidbodyConstraints2D.FreezeAll;
-            anim.SetTrigger("Winning");
+            
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
             
         }

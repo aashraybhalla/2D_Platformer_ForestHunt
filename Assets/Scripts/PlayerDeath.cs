@@ -21,7 +21,7 @@ public class PlayerDeath : MonoBehaviour
         if (collision.gameObject.CompareTag("trap"))
         {
             Die();
-            Invoke("RestartLevel", 1f);
+            Invoke("RestartLevel", 2f);
         }
     }
 
