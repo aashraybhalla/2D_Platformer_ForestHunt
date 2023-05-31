@@ -14023,6 +14023,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb2e6dc805ab0bd4c9c2f5595b8af37f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameWin: {fileID: 0}
 --- !u!96 &2074486891
 TrailRenderer:
   serializedVersion: 2
